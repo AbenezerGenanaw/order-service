@@ -3,7 +3,7 @@ package edu.miu.cs590.orderservice.dto;
 import lombok.Data;
 
 @Data
-public class    ShippingAddressDto {
+public class ShippingAddressDto {
 
     private Long id;
     private Long OrderId;

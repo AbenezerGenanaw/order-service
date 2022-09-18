@@ -2,26 +2,30 @@ package edu.miu.cs590.orderservice.serviceimpl;
 
 import edu.miu.cs590.orderservice.dto.OrderDto;
 import edu.miu.cs590.orderservice.entity.Order;
-import edu.miu.cs590.orderservice.mapper.OrderMapper;
+import edu.miu.cs590.orderservice.entity.OrderStatus;
+import edu.miu.cs590.orderservice.entity.PaymentInfo;
+
 import edu.miu.cs590.orderservice.repository.OrderRepository;
 import edu.miu.cs590.orderservice.service.OrderService;
+import edu.miu.cs590.orderservice.util.MapperUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class OrderServiceimpl implements OrderService {
 
-    @Autowired
-    OrderMapper orderMapper;
+//    @Autowired
+//    OrderMapper orderMapper;
 
     @Autowired
     OrderRepository orderRepository;
 
     @Override
     public OrderDto getById(Long id) {
-        return orderMapper.toOrderDto(orderRepository.findById(id).orElseThrow());
+        return MapperUtil.map(orderRepository.findById(id), OrderDto.class);
     }
 
     @Override
@@ -39,9 +43,20 @@ public class OrderServiceimpl implements OrderService {
 
 
     @Override
-    public OrderDto save(OrderDto order) {
+    public OrderDto save(OrderDto orderDto) {
 
-        return orderMapper.toOrderDto(orderRepository.save(orderMapper.dtoToOrder(order)));
+        Order order = MapperUtil.map(orderDto, Order.class);
+        order.setStatus(OrderStatus.DRAFT);
+
+        return null;
+       // return orderMapper.toOrderDto(orderRepository.save(orderMapper.dtoToOrder(order)));
+    }
+
+
+
+    @Override
+    public OrderDto pay(Long orderId, PaymentInfo paymentInfo) {
+        return null;
     }
 
 //    @Override
@@ -51,13 +66,18 @@ public class OrderServiceimpl implements OrderService {
 
 
     @Override
-    public OrderDto updateOrder(OrderDto orderDto) {
+    public OrderDto updateStatus(Long id, OrderStatus status) {
 
-        Order ord = orderMapper.dtoToOrder(orderDto);
-                if(ord != null){
-                    return orderMapper.toOrderDto(orderRepository.save(ord));
-                }
-                return null;
+        Order order = orderRepository.getReferenceById(id);
+        order.setStatus(status);
+        OrderDto orderDto = MapperUtil.map(orderRepository.save(order), OrderDto.class);
+        return orderDto;
+
+//        Order ord = orderMapper.dtoToOrder(orderDto);
+//                if(ord != null){
+//                    return orderMapper.toOrderDto(orderRepository.save(ord));
+//                }
+//                return null;
     }
 
 
