@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/orders")
+@RequestMapping("/api/orders")
 public class OrderController {
 
     @Autowired
@@ -44,7 +44,7 @@ public class OrderController {
         return new ResponseEntity<Object>(orderService.updateStatus(id,orderStatus), HttpStatus.OK);
     }
 
-    @PostMapping
+    @PostMapping("/{id}/pay")
     public ResponseEntity<?> pay(@PathVariable Long id, @RequestBody PaymentInfo paymentInfo){
         OrderDto orderDto = orderService.pay(id, paymentInfo);
         if(orderDto == null) return new ResponseEntity<>("Payment failed", HttpStatus.BAD_REQUEST);

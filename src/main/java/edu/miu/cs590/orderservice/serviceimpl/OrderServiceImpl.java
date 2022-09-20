@@ -1,24 +1,28 @@
 package edu.miu.cs590.orderservice.serviceimpl;
 
+import edu.miu.cs590.orderservice.clients.OrderFeignClient;
 import edu.miu.cs590.orderservice.dto.OrderDto;
-import edu.miu.cs590.orderservice.entity.Order;
-import edu.miu.cs590.orderservice.entity.OrderStatus;
-import edu.miu.cs590.orderservice.entity.PaymentInfo;
+import edu.miu.cs590.orderservice.entity.*;
 
+import edu.miu.cs590.orderservice.mapper.OrderMapper;
 import edu.miu.cs590.orderservice.repository.OrderRepository;
 import edu.miu.cs590.orderservice.service.OrderService;
 import edu.miu.cs590.orderservice.util.MapperUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
-public class OrderServiceimpl implements OrderService {
+public class OrderServiceImpl implements OrderService {
 
-//    @Autowired
-//    OrderMapper orderMapper;
+    @Autowired
+    OrderMapper orderMapper;
+
+    @Autowired
+    OrderFeignClient paymentServiceProxy;
 
     @Autowired
     OrderRepository orderRepository;
@@ -30,12 +34,11 @@ public class OrderServiceimpl implements OrderService {
 
     @Override
     public List<OrderDto> getAllOrders() {
-        try{
+        try {
             List<Order> orders = orderRepository.findAll();
 //            return orderMapper.toOrderDtos(orders);
             return null;
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
@@ -48,15 +51,55 @@ public class OrderServiceimpl implements OrderService {
         Order order = MapperUtil.map(orderDto, Order.class);
         order.setStatus(OrderStatus.DRAFT);
 
-        return null;
-       // return orderMapper.toOrderDto(orderRepository.save(orderMapper.dtoToOrder(order)));
+        //return null;
+        return orderMapper.toOrderDto(orderRepository.save(order));
     }
-
 
 
     @Override
     public OrderDto pay(Long orderId, PaymentInfo paymentInfo) {
-        return null;
+        Order order = orderRepository.getById(orderId);
+
+
+        PaymentRequest request = new PaymentRequest();
+        request.setUserId(order.getUserId());
+        request.setOrderId(order.toString());
+        request.setPaypalId(paymentInfo.getPaypalId());
+        request.setBankAccNumber(paymentInfo.getBankAccNumber());
+        request.setCreditCardNumber(paymentInfo.getCreditCardNumber());
+
+        Double totalPrice = 0.0;
+
+        for (Items item : order.getItems()) {
+            totalPrice = item.getPrice();
+        }
+
+        request.setBalance(totalPrice);
+
+        ResponseEntity<String> response = null;
+
+        switch (order.getPaymentType()){
+            case BANK:
+                response = paymentServiceProxy.processBankPayment(request);
+                break;
+            case CC:
+                response = paymentServiceProxy.processCcPayment(request);
+                break;
+            case PAYPAL:
+                response = paymentServiceProxy.processPayPalPayment(request);
+                break;
+
+        }
+
+        if (response.getStatusCode() != HttpStatus.OK) {
+            return null;
+        }
+
+        order.setStatus(OrderStatus.PLACED);
+        orderRepository.save(order);
+
+        return MapperUtil.map(orderRepository.save(order), OrderDto.class);
+
     }
 
 //    @Override
@@ -83,7 +126,7 @@ public class OrderServiceimpl implements OrderService {
 
     @Override
     public void deleteOrder(Long id) {
-      orderRepository.deleteById(id);
+        orderRepository.deleteById(id);
     }
 }
 

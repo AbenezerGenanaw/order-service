@@ -31,8 +31,8 @@ public class Order {
             inverseJoinColumns = {@JoinColumn(name="items_id")})
     private List<Items> items = new java.util.ArrayList<>();
 
-      @Embedded
-   private ShippingAddress shippingAddress;
+    @Embedded
+    private ShippingAddress shippingAddress;
 
 
 

@@ -7,18 +7,17 @@ import lombok.ToString;
 
 import javax.persistence.*;
 
-
 @Data
 @NoArgsConstructor
 @ToString
 @AllArgsConstructor
 @Embeddable
 public class ShippingAddress {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+//    @Id
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    private Long id;
 
-    private Long OrderId;
+//    private Long OrderId;
     private String address1;
     private String address2;
     private String city;
